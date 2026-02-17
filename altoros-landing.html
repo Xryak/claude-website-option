@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Altoros — AI Agent Monetization</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body { overflow-x: hidden; background: #fff; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script>
+const e = React.createElement;
+const { useState, useEffect, useRef } = React;
+
+const ACCENT = "#6C3FE0";
+const ACCENT_DARK = "#5530B8";
+const ACCENT_LIGHT = "#EDE7FB";
+
+function useOnScreen() {
+  const ref = useRef(null);
+  const [v, setV] = useState(false);
+  useEffect(() => {
+    const obs = new IntersectionObserver(([en]) => { if (en.isIntersecting) { setV(true); obs.unobserve(en.target); } }, { threshold: 0.12 });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+  return [ref, v];
+}
+
+function FadeIn({ children, delay = 0, className, style = {} }) {
+  const [ref, vis] = useOnScreen();
+  return e("div", {
+    ref, className,
+    style: {
+      opacity: vis ? 1 : 0,
+      transform: vis ? "translateY(0)" : "translateY(32px)",
+      transition: `opacity 0.7s cubic-bezier(.23,1,.32,1) ${delay}s, transform 0.7s cubic-bezier(.23,1,.32,1) ${delay}s`,
+      ...style,
+    }
+  }, children);
+}
+
+/* Icons */
+function IconBlock() {
+  return e("svg", { width: 36, height: 36, viewBox: "0 0 36 36", fill: "none" },
+    e("rect", { x: 4, y: 4, width: 28, height: 28, rx: 6, stroke: ACCENT, strokeWidth: 2.2 }),
+    e("line", { x1: 10, y1: 10, x2: 26, y2: 26, stroke: ACCENT, strokeWidth: 2.2, strokeLinecap: "round" }),
+    e("line", { x1: 26, y1: 10, x2: 10, y2: 26, stroke: ACCENT, strokeWidth: 2.2, strokeLinecap: "round" })
+  );
+}
+function IconOpen() {
+  return e("svg", { width: 36, height: 36, viewBox: "0 0 36 36", fill: "none" },
+    e("rect", { x: 4, y: 4, width: 28, height: 28, rx: 6, stroke: ACCENT, strokeWidth: 2.2 }),
+    e("path", { d: "M12 18h12M18 12v12", stroke: ACCENT, strokeWidth: 2.2, strokeLinecap: "round" })
+  );
+}
+function IconWait() {
+  return e("svg", { width: 36, height: 36, viewBox: "0 0 36 36", fill: "none" },
+    e("circle", { cx: 18, cy: 18, r: 13, stroke: ACCENT, strokeWidth: 2.2 }),
+    e("path", { d: "M18 11v7.5l5 3", stroke: ACCENT, strokeWidth: 2.2, strokeLinecap: "round", strokeLinejoin: "round" })
+  );
+}
+function IconPublisher() {
+  return e("svg", { width: 32, height: 32, viewBox: "0 0 32 32", fill: "none" },
+    e("rect", { x: 5, y: 3, width: 22, height: 26, rx: 3, stroke: ACCENT, strokeWidth: 2 }),
+    e("line", { x1: 10, y1: 10, x2: 22, y2: 10, stroke: ACCENT, strokeWidth: 1.5, strokeLinecap: "round" }),
+    e("line", { x1: 10, y1: 15, x2: 22, y2: 15, stroke: ACCENT, strokeWidth: 1.5, strokeLinecap: "round" }),
+    e("line", { x1: 10, y1: 20, x2: 17, y2: 20, stroke: ACCENT, strokeWidth: 1.5, strokeLinecap: "round" })
+  );
+}
+function IconAPI() {
+  return e("svg", { width: 32, height: 32, viewBox: "0 0 32 32", fill: "none" },
+    e("rect", { x: 3, y: 7, width: 26, height: 18, rx: 4, stroke: ACCENT, strokeWidth: 2 }),
+    e("circle", { cx: 10, cy: 16, r: 2.5, stroke: ACCENT, strokeWidth: 1.5 }),
+    e("circle", { cx: 22, cy: 16, r: 2.5, stroke: ACCENT, strokeWidth: 1.5 }),
+    e("line", { x1: 12.5, y1: 16, x2: 19.5, y2: 16, stroke: ACCENT, strokeWidth: 1.5, strokeLinecap: "round" })
+  );
+}
+function IconSaaS() {
+  return e("svg", { width: 32, height: 32, viewBox: "0 0 32 32", fill: "none" },
+    e("rect", { x: 4, y: 4, width: 24, height: 16, rx: 3, stroke: ACCENT, strokeWidth: 2 }),
+    e("line", { x1: 12, y1: 24, x2: 20, y2: 24, stroke: ACCENT, strokeWidth: 2, strokeLinecap: "round" }),
+    e("line", { x1: 16, y1: 20, x2: 16, y2: 24, stroke: ACCENT, strokeWidth: 2, strokeLinecap: "round" })
+  );
+}
+function IconResearch() {
+  return e("svg", { width: 32, height: 32, viewBox: "0 0 32 32", fill: "none" },
+    e("circle", { cx: 14, cy: 14, r: 9, stroke: ACCENT, strokeWidth: 2 }),
+    e("line", { x1: 20.5, y1: 20.5, x2: 28, y2: 28, stroke: ACCENT, strokeWidth: 2.2, strokeLinecap: "round" })
+  );
+}
+function ArrowRight({ size = 18, color = "#fff" }) {
+  return e("svg", { width: size, height: size, viewBox: "0 0 18 18", fill: "none" },
+    e("path", { d: "M4 9h10M10 5l4 4-4 4", stroke: color, strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" })
+  );
+}
+
+/* Header */
+function Header() {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const h = () => setScrolled(window.scrollY > 40);
+    window.addEventListener("scroll", h, { passive: true });
+    return () => window.removeEventListener("scroll", h);
+  }, []);
+  return e("header", {
+    style: {
+      position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
+      background: scrolled ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0)",
+      backdropFilter: scrolled ? "blur(12px)" : "none",
+      borderBottom: scrolled ? "1px solid #e5e5e5" : "1px solid transparent",
+      transition: "all 0.35s ease",
+    }
+  },
+    e("div", { style: { maxWidth: 1200, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64 } },
+      e("span", { style: { fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: 22, letterSpacing: "0.06em", color: "#1a1a1a" } }, "ALTOROS"),
+      e("a", {
+        href: "#cta",
+        style: { background: ACCENT, color: "#fff", padding: "10px 22px", borderRadius: 8, fontSize: 14, fontFamily: "'DM Sans', sans-serif", fontWeight: 600, textDecoration: "none", transition: "background 0.2s", letterSpacing: "0.01em" },
+        onMouseEnter: function(ev) { ev.currentTarget.style.background = ACCENT_DARK; },
+        onMouseLeave: function(ev) { ev.currentTarget.style.background = ACCENT; },
+      }, "Book a Call")
+    )
+  );
+}
+
+/* Hero */
+function Hero() {
+  const [ref, vis] = useOnScreen();
+  const t = (d) => `all 0.8s cubic-bezier(.23,1,.32,1) ${d}s`;
+  return e("section", { ref, style: { minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "120px 24px 80px", background: "#FAFAFA" } },
+    e("div", { style: { maxWidth: 820, textAlign: "center" } },
+      e("h1", { style: { fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, fontSize: "clamp(2.4rem, 5.5vw, 3.8rem)", lineHeight: 1.13, color: "#111", marginBottom: 28, letterSpacing: "-0.02em", opacity: vis ? 1 : 0, transform: vis ? "translateY(0)" : "translateY(40px)", transition: t(0) } },
+        "Your content is already working for AI. ",
+        e("span", { style: { color: ACCENT } }, "Is AI working for you?")
+      ),
+      e("p", { style: { fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(1.05rem, 2vw, 1.25rem)", lineHeight: 1.65, color: "#555", maxWidth: 660, margin: "0 auto 40px", opacity: vis ? 1 : 0, transform: vis ? "translateY(0)" : "translateY(28px)", transition: t(0.15) } },
+        "AI agents are consuming your data around the clock \u2014 scraping articles, querying APIs, extracting insights. They generate value from your content, but none of that value flows back to you. There\u2019s a third way between blocking AI and giving it away for free."
+      ),
+      e("a", {
+        href: "#cta",
+        style: { display: "inline-flex", alignItems: "center", gap: 10, background: ACCENT, color: "#fff", padding: "16px 36px", borderRadius: 10, fontSize: 16, fontFamily: "'DM Sans', sans-serif", fontWeight: 600, textDecoration: "none", transition: "all 0.25s", opacity: vis ? 1 : 0, transform: vis ? "translateY(0)" : "translateY(20px)", transitionDelay: "0.3s" },
+        onMouseEnter: function(ev) { ev.currentTarget.style.background = ACCENT_DARK; ev.currentTarget.style.transform = "translateY(-2px)"; },
+        onMouseLeave: function(ev) { ev.currentTarget.style.background = ACCENT; ev.currentTarget.style.transform = "translateY(0)"; },
+      }, "Book a Discovery Call ", e(ArrowRight, null))
+    )
+  );
+}
+
+/* Problem */
+function Problem() {
+  var cards = [
+    { icon: e(IconBlock), title: "Block AI Entirely", body: "You add rules to robots.txt, deploy rate limiters, block known bot user agents. Result: your content becomes invisible to the fastest-growing discovery channel. AI-powered search and assistants simply skip you." },
+    { icon: e(IconOpen), title: "Allow Free Access", body: "You leave the gates open. AI agents consume your data, synthesize answers, and serve them to users \u2014 who never visit your site, see your ads, or hit your paywall. You provide the value, someone else captures it." },
+    { icon: e(IconWait), title: "The Status Quo", body: "You do nothing and hope it works out. Meanwhile, AI traffic is growing exponentially. What\u2019s 5% of your requests today will be 40% within two years. The economics of \u201Cfree\u201D get worse every quarter." },
+  ];
+  return e("section", { style: { padding: "100px 24px", background: "#fff" } },
+    e("div", { style: { maxWidth: 1120, margin: "0 auto" } },
+      e(FadeIn, null,
+        e("p", { style: { fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: "0.12em", textTransform: "uppercase", color: ACCENT, marginBottom: 14, textAlign: "center" } }, "The Problem"),
+        e("h2", { style: { fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, fontSize: "clamp(1.8rem, 4vw, 2.6rem)", textAlign: "center", color: "#111", marginBottom: 56, letterSpacing: "-0.015em" } }, "Three dead ends")
+      ),
+      e("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 28 } },
+        cards.map(function(c, i) {
+          return e(FadeIn, { key: i, delay: i * 0.12 },
+            e("div", {
+              style: { background: "#FAFAFA", borderRadius: 16, padding: "36px 30px", height: "100%", border: "1px solid #EFEFEF", transition: "box-shadow 0.3s, transform 0.3s", cursor: "default" },
+              onMouseEnter: function(ev) { ev.currentTarget.style.boxShadow = "0 8px 32px rgba(108,63,224,0.08)"; ev.currentTarget.style.transform = "translateY(-4px)"; },
+              onMouseLeave: function(ev) { ev.currentTarget.style.boxShadow = "none"; ev.currentTarget.style.transform = "translateY(0)"; },
+            },
+              e("div", { style: { marginBottom: 20 } }, c.icon),
+              e("h3", { style: { fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: 19, color: "#1a1a1a", marginBottom: 12 } }, c.title),
+              e("p", { style: { fontFamily: "'DM Sans', sans-serif", fontSize: 15, lineHeight: 1.65, color: "#666" } }, c.body)
+            )
+          );
+        })
+      )
+    )
+  );
+}
+
+/* Third Way */
+function ThirdWay() {
+  return e("section", { style: { padding: "100px 24px", background: "#F4F1FB" } },
+    e("div", { style: { maxWidth: 800, margin: "0 auto" } },
+      e(FadeIn, null,
+        e("p", { style: { fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: "0.12em", textTransform: "uppercase", color: ACCENT, marginBottom: 14 } }, "The Third Way"),
+        e("h2", { style: { fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, fontSize: "clamp(1.8rem, 4vw, 2.6rem)", color: "#111", marginBottom: 28, letterSpacing: "-0.015em" } }, "Let AI agents pay for what they use")
+      ),
+      e(FadeIn, { delay: 0.1 },
+        e("p", { style: { fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(1rem, 1.8vw, 1.12rem)", lineHeight: 1.72, color: "#444" } },
+          "A new infrastructure layer is emerging that allows AI agents to pay for data access in real time \u2014 per request, per query, per article. No subscriptions, no API keys, no contracts. The agent sends a payment, gets the data, moves on."
+        ),
+        e("p", { style: { fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(1rem, 1.8vw, 1.12rem)", lineHeight: 1.72, color: "#444", marginTop: 20 } },
+          "It\u2019s already live: Stripe launched support for machine-to-machine payments in February 2025. CoinGecko charges AI agents $0.01 per API request \u2014 no account required. Over 100 million agent payments have been processed in the last year."
+        ),
+        e("p", { style: { fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(1.05rem, 1.8vw, 1.18rem)", lineHeight: 1.72, color: "#1a1a1a", marginTop: 24, fontWeight: 600 } },
+          "This isn\u2019t a concept. It\u2019s infrastructure \u2014 and it\u2019s ready."
+        )
+      )
+    )
+  );
+}
+
+/* Steps */
+function Steps() {
+  var steps = [
+    { num: "01", title: "Understand", body: "We analyze your traffic to identify AI agent activity \u2014 who\u2019s coming, how often, what they consume, and how much value they extract. You get a clear picture of what\u2019s happening before making any decisions." },
+    { num: "02", title: "Monetize", body: "We integrate a payment layer into your existing infrastructure. AI agents that want your data pay for it automatically. You set the prices \u2014 per request, per dataset, per endpoint. Your human users are completely unaffected." },
+    { num: "03", title: "Scale", body: "We handle the operational complexity \u2014 payment processing, analytics, optimization. You focus on your product. We make sure the revenue flows." },
+  ];
+  return e("section", { style: { padding: "100px 24px", background: "#fff" } },
+    e("div", { style: { maxWidth: 1120, margin: "0 auto" } },
+      e(FadeIn, null,
+        e("p", { style: { fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: "0.12em", textTransform: "uppercase", color: ACCENT, marginBottom: 14, textAlign: "center" } }, "How We Help"),
+        e("h2", { style: { fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, fontSize: "clamp(1.8rem, 4vw, 2.6rem)", textAlign: "center", color: "#111", marginBottom: 64, letterSpacing: "-0.015em" } }, "Three steps to agent revenue")
+      ),
+      e("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 0 } },
+        steps.map(function(s, i) {
+          return e(FadeIn, { key: i, delay: i * 0.14 },
+            e("div", { style: { padding: "0 28px", position: "relative", borderLeft: i > 0 ? "1px solid #E5E0F5" : "none" } },
+              e("span", { style: { fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 52, fontWeight: 400, color: ACCENT_LIGHT, lineHeight: 1, display: "block", marginBottom: 8 } }, s.num),
+              e("h3", { style: { fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: 20, color: "#1a1a1a", marginBottom: 12 } }, s.title),
+              e("p", { style: { fontFamily: "'DM Sans', sans-serif", fontSize: 15, lineHeight: 1.65, color: "#666" } }, s.body)
+            )
+          );
+        })
+      )
+    )
+  );
+}
+
+/* Metrics */
+function Metrics() {
+  var stats = [
+    { value: "$24M+", label: "Monthly volume in AI agent payments" },
+    { value: "100M+", label: "Machine-to-machine payments processed" },
+    { value: "40+", label: "Companies accepting AI agent payments" },
+    { value: "$0.01", label: "Per request \u2014 CoinGecko\u2019s AI agent price" },
+  ];
+  return e("section", { style: { padding: "100px 24px", background: "#FAFAFA" } },
+    e("div", { style: { maxWidth: 1120, margin: "0 auto" } },
+      e(FadeIn, null,
+        e("p", { style: { fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: "0.12em", textTransform: "uppercase", color: ACCENT, marginBottom: 14, textAlign: "center" } }, "Why Now"),
+        e("h2", { style: { fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, fontSize: "clamp(1.8rem, 4vw, 2.6rem)", textAlign: "center", color: "#111", marginBottom: 56, letterSpacing: "-0.015em" } }, "The market is moving")
+      ),
+      e("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 24 } },
+        stats.map(function(s, i) {
+          return e(FadeIn, { key: i, delay: i * 0.1 },
+            e("div", { style: { background: "#fff", borderRadius: 16, padding: "36px 28px", textAlign: "center", border: "1px solid #EFEFEF" } },
+              e("div", { style: { fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "clamp(2rem, 4vw, 2.8rem)", fontWeight: 400, color: ACCENT, marginBottom: 10, letterSpacing: "-0.02em" } }, s.value),
+              e("p", { style: { fontFamily: "'DM Sans', sans-serif", fontSize: 14, lineHeight: 1.55, color: "#777" } }, s.label)
+            )
+          );
+        })
+      ),
+      e(FadeIn, { delay: 0.4 },
+        e("p", { style: { fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: "#aaa", textAlign: "center", marginTop: 32, lineHeight: 1.5 } },
+          "Sources: Coinbase x402 ecosystem data, Stripe announcements, public company reports. February 2025."
+        )
+      )
+    )
+  );
+}
+
+/* Audience */
+function Audience() {
+  var items = [
+    { icon: e(IconPublisher), title: "Publishers & Media", body: "Articles, reports, analysis that AI agents scrape and summarize." },
+    { icon: e(IconAPI), title: "Data & API Providers", body: "Financial data, geolocation, weather, real estate \u2014 high-value endpoints AI agents call millions of times." },
+    { icon: e(IconSaaS), title: "SaaS Platforms", body: "Product data, user-generated content, proprietary datasets embedded in your platform." },
+    { icon: e(IconResearch), title: "Research & Analytics", body: "Market intelligence, academic data, industry benchmarks that power AI-driven insights." },
+  ];
+  return e("section", { style: { padding: "100px 24px", background: "#fff" } },
+    e("div", { style: { maxWidth: 1000, margin: "0 auto" } },
+      e(FadeIn, null,
+        e("p", { style: { fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: "0.12em", textTransform: "uppercase", color: ACCENT, marginBottom: 14, textAlign: "center" } }, "Who This Is For"),
+        e("h2", { style: { fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, fontSize: "clamp(1.8rem, 4vw, 2.6rem)", textAlign: "center", color: "#111", marginBottom: 56, letterSpacing: "-0.015em" } }, "Built for businesses with data AI wants")
+      ),
+      e("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 28 } },
+        items.map(function(item, i) {
+          return e(FadeIn, { key: i, delay: i * 0.1 },
+            e("div", { style: { textAlign: "center", padding: "28px 16px" } },
+              e("div", { style: { marginBottom: 16, display: "flex", justifyContent: "center" } }, item.icon),
+              e("h3", { style: { fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: 17, color: "#1a1a1a", marginBottom: 8 } }, item.title),
+              e("p", { style: { fontFamily: "'DM Sans', sans-serif", fontSize: 14, lineHeight: 1.6, color: "#777" } }, item.body)
+            )
+          );
+        })
+      )
+    )
+  );
+}
+
+/* About */
+function About() {
+  return e("section", { style: { padding: "100px 24px", background: "#FAFAFA" } },
+    e("div", { style: { maxWidth: 760, margin: "0 auto" } },
+      e(FadeIn, null,
+        e("p", { style: { fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: "0.12em", textTransform: "uppercase", color: ACCENT, marginBottom: 14 } }, "About"),
+        e("h2", { style: { fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, fontSize: "clamp(1.8rem, 4vw, 2.6rem)", color: "#111", marginBottom: 24, letterSpacing: "-0.015em" } }, "Engineering-first, since 2001")
+      ),
+      e(FadeIn, { delay: 0.1 },
+        e("p", { style: { fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(1rem, 1.8vw, 1.1rem)", lineHeight: 1.72, color: "#555" } },
+          "Altoros is a software engineering consultancy with 20+ years of experience building and integrating complex systems for enterprise clients. We\u2019ve done hundreds of Stripe integrations, built payment infrastructure for SaaS companies, and now we help content owners capture revenue from the AI agent economy. We handle the technical complexity so you don\u2019t have to."
+        )
+      )
+    )
+  );
+}
+
+/* CTA */
+function CTA() {
+  return e("section", { id: "cta", style: { padding: "100px 24px", background: "linear-gradient(135deg, " + ACCENT + " 0%, #8B5CF6 100%)" } },
+    e("div", { style: { maxWidth: 700, margin: "0 auto", textAlign: "center" } },
+      e(FadeIn, null,
+        e("h2", { style: { fontFamily: "'Instrument Serif', Georgia, serif", fontWeight: 400, fontSize: "clamp(1.8rem, 4vw, 2.5rem)", color: "#fff", marginBottom: 20, letterSpacing: "-0.015em" } },
+          "Let\u2019s see what AI agents are doing with your content"
+        )
+      ),
+      e(FadeIn, { delay: 0.1 },
+        e("p", { style: { fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(1rem, 1.8vw, 1.12rem)", lineHeight: 1.65, color: "rgba(255,255,255,0.85)", marginBottom: 40 } },
+          "Book a discovery call. We\u2019ll walk you through what AI agent monetization looks like for your specific business."
+        )
+      ),
+      e(FadeIn, { delay: 0.2 },
+        e("a", {
+          href: "https://calendly.com/placeholder", target: "_blank", rel: "noopener noreferrer",
+          style: { display: "inline-flex", alignItems: "center", gap: 10, background: "#fff", color: ACCENT, padding: "18px 40px", borderRadius: 10, fontSize: 17, fontFamily: "'DM Sans', sans-serif", fontWeight: 700, textDecoration: "none", transition: "all 0.25s", boxShadow: "0 4px 24px rgba(0,0,0,0.15)" },
+          onMouseEnter: function(ev) { ev.currentTarget.style.transform = "translateY(-2px)"; ev.currentTarget.style.boxShadow = "0 8px 32px rgba(0,0,0,0.2)"; },
+          onMouseLeave: function(ev) { ev.currentTarget.style.transform = "translateY(0)"; ev.currentTarget.style.boxShadow = "0 4px 24px rgba(0,0,0,0.15)"; },
+        }, "Book a Discovery Call ", e(ArrowRight, { color: ACCENT }))
+      )
+    )
+  );
+}
+
+/* Footer */
+function Footer() {
+  var linkStyle = { color: "#888", textDecoration: "none", transition: "color 0.2s" };
+  function hIn(ev) { ev.currentTarget.style.color = "#ccc"; }
+  function hOut(ev) { ev.currentTarget.style.color = "#888"; }
+  return e("footer", { style: { padding: "40px 24px", background: "#111", color: "#888" } },
+    e("div", { style: { maxWidth: 1120, margin: "0 auto", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 16, fontFamily: "'DM Sans', sans-serif", fontSize: 13 } },
+      e("span", null, "\u00A9 2025 Altoros"),
+      e("div", { style: { display: "flex", gap: 24, flexWrap: "wrap" } },
+        e("a", { href: "https://altoros.com", target: "_blank", rel: "noopener noreferrer", style: linkStyle, onMouseEnter: hIn, onMouseLeave: hOut }, "altoros.com"),
+        e("a", { href: "#", style: linkStyle, onMouseEnter: hIn, onMouseLeave: hOut }, "Privacy Policy"),
+        e("a", { href: "mailto:contact@altoros.com", style: linkStyle, onMouseEnter: hIn, onMouseLeave: hOut }, "contact@altoros.com")
+      )
+    )
+  );
+}
+
+/* App */
+function App() {
+  return e(React.Fragment, null,
+    e(Header),
+    e("main", null,
+      e(Hero),
+      e(Problem),
+      e(ThirdWay),
+      e(Steps),
+      e(Metrics),
+      e(Audience),
+      e(About),
+      e(CTA)
+    ),
+    e(Footer)
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(e(App));
+</script>
+</body>
+</html>
